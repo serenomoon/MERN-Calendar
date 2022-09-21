@@ -1,30 +1,20 @@
 import { Calendar } from 'react-big-calendar'
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-import { addHours } from 'date-fns';
-
-import { Navbar } from "../"
+import { Navbar,CalendarEvent,CalendarModal,FabAddNew, FabDelete } from "../"
 import { localizer, getMessagesES } from '../../helpers';
-
-
-
-const events = [{
-  title: 'Cumpleaños Samus',
-  notes: 'Hay que festejar',
-  start: new Date(),
-  end: addHours( new Date(), 2 ),
-  bgColor: '#fafafa',
-  user: {
-    _id: '123',
-    name: 'Saulo'
-  }
-
-}]
+import { useState } from 'react';
+import { useUiStore, useCalendarStore } from '../../hooks';
 
 export const CalendarPage = () => {
 
+  const { events, setActiveEvent } = useCalendarStore();
+
+  const { openDateModal } = useUiStore();
+
+  const [lastView, setLastView] = useState(localStorage.getItem('lastView') || 'week');
+
   const eventStyleGetter = ( event, start, end, isSelected ) => {
-    console.log({ event, start, end, isSelected });
 
     const style = {
       backgroundColor: '#347CF7',
@@ -39,6 +29,19 @@ export const CalendarPage = () => {
     
   };
 
+  const onDoubleClick = ( event ) => {
+    openDateModal();
+  }
+
+  const onSelect = ( event ) => {
+    setActiveEvent( event );
+  }
+
+  const onViewChanged = ( event ) => {
+     localStorage.setItem('lastView', event);
+     setLastView( event );
+  }
+
   return (
     <>
       <Navbar />
@@ -47,12 +50,23 @@ export const CalendarPage = () => {
         culture='es'
         localizer={ localizer }
         events={ events }
+        defaultView={ lastView }
         startAccessor="start"
         endAccessor="end"
         style={{ height: 'calc(100vh - 80px)' }}
         messages={ getMessagesES() }
         eventPropGetter={ eventStyleGetter }
+        components={{
+          event: CalendarEvent
+        }}
+        onDoubleClickEvent={ onDoubleClick }
+        onSelectEvent={ onSelect }
+        onView={ onViewChanged }
       />
+
+      <CalendarModal />
+      <FabAddNew />
+      <FabDelete />
     </>
   )
 }
